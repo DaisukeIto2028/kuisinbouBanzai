@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>くいしんぼう万歳</title>
+  <style>
+    :root {
+      --primary: #FF6B35;
+      --primary-dark: #E85D2C;
+      --secondary: #FFB347;
+      --accent: #FF4757;
+      --green: #2D8B4E;
+      --bg: #FFF8F0;
+      --bg-card: #FFFFFF;
+      --text: #3D2C2C;
+      --text-light: #8B7E7E;
+      --text-white: #FFFFFF;
+      --shadow-lg: 0 16px 48px rgba(61,44,44,0.18);
+      --radius: 20px;
+      --radius-sm: 12px;
+      --ease: cubic-bezier(0.4, 0, 0.2, 1);
+      --bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --glow-color: rgba(255,107,53,0.4);
+      --glow-rgb: 255,107,53;
+      --gradient: linear-gradient(135deg, var(--primary), var(--accent));
+      --bg-gradient: linear-gradient(180deg, #FFF2E8 0%, var(--bg) 40%);
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN",
+                   "Noto Sans JP", "Yu Gothic", "Meiryo", sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text);
+      min-height: 100dvh;
+      display: flex;
+      justify-content: center;
+      -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      transition: background 0.4s;
+    }
+
+    #app {
+      width: 100%;
+      max-width: 480px;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 20px env(safe-area-inset-bottom, 16px);
+    }
+
+    /* ── Header ──────────────────────────── */
+    .header { text-align: center; margin-top: 12px; margin-bottom: 20px; }
+    .header-emoji { font-size: 44px; display: block; margin-bottom: 6px; animation: float 3s ease-in-out infinite; }
+    .header h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+    .header p { font-size: 13px; color: var(--text-light); margin-top: 3px; transition: color 0.4s; }
+
+    /* ── Mode toggle ─────────────────────── */
+    .mode-toggle {
+      display: flex;
+      background: rgba(0,0,0,0.06);
+      border-radius: 14px;
+      padding: 3px;
+      margin-bottom: 24px;
+      width: 100%;
+      max-width: 280px;
+    }
+    .mode-btn {
+      flex: 1;
+      padding: 10px 0;
+      border: none;
+      border-radius: 11px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      background: transparent;
+      color: var(--text-light);
+      transition: all 0.25s var(--ease);
+    }
+    .mode-btn.active {
+      background: var(--bg-card);
+      color: var(--text);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    /* ── Screen ──────────────────────────── */
+    .screen { display: none; width: 100%; flex-direction: column; align-items: center; flex: 1; }
+    .screen.active { display: flex; }
+
+    /* ── Idle ─────────────────────────────── */
+    .loc-section { width: 100%; margin-bottom: 20px; }
+    .loc-label { font-size: 13px; font-weight: 600; color: var(--text-light); margin-bottom: 8px; }
+    .loc-input-wrap { display: flex; gap: 8px; }
+    .loc-input {
+      flex: 1;
+      padding: 14px 16px;
+      border: 2px solid rgba(0,0,0,0.08);
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      outline: none;
+      color: var(--text);
+      background: var(--bg-card);
+      transition: border-color 0.2s;
+    }
+    .loc-input:focus { border-color: var(--primary); }
+    .loc-input::placeholder { color: #C4B8B8; }
+
+    .radius-selector {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 24px;
+      background: rgba(0,0,0,0.04);
+      padding: 4px;
+      border-radius: 14px;
+      align-self: center;
+    }
+    .radius-option {
+      border: none;
+      background: transparent;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-light);
+      cursor: pointer;
+      transition: all 0.2s var(--ease);
+    }
+    .radius-option.active {
+      background: var(--primary);
+      color: var(--text-white);
+      box-shadow: 0 2px 8px var(--glow-color);
+    }
+
+    .budget-selector {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .budget-option {
+      border: 2px solid rgba(0,0,0,0.06);
+      background: transparent;
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-light);
+      cursor: pointer;
+      transition: all 0.2s var(--ease);
+    }
+    .budget-option.active {
+      border-color: var(--primary);
+      color: var(--primary-dark);
+      background: rgba(var(--glow-rgb),0.08);
+    }
+    body.izakaya .budget-option { border-color: rgba(255,255,255,0.1); }
+    body.izakaya .budget-option.active { border-color: var(--primary); color: var(--primary); }
+
+    .search-btn {
+      width: 100%;
+      padding: 18px;
+      border: none;
+      border-radius: var(--radius);
+      background: var(--gradient);
+      color: var(--text-white);
+      font-size: 17px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 6px 24px var(--glow-color);
+      transition: all 0.2s var(--ease);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      animation: pulse-glow 2.5s ease-in-out infinite;
+    }
+    .search-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 32px var(--glow-color); }
+    .search-btn:active { transform: scale(0.97); }
+
+    .saved-hint {
+      font-size: 11px;
+      color: var(--text-light);
+      margin-top: 12px;
+      text-align: center;
+      opacity: 0.7;
+    }
+
+    /* ── Loading ──────────────────────────── */
+    .loading-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; gap: 20px; padding-bottom: 60px; }
+    .loading-emoji { font-size: 64px; animation: wiggle 0.5s ease-in-out infinite; }
+    .loading-text { font-size: 16px; font-weight: 600; text-align: center; }
+    .loading-sub { font-size: 13px; color: var(--text-light); margin-top: 4px; text-align: center; }
+
+    /* ── Result ───────────────────────────── */
+    .result-wrap { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+    .result-wrap.animate { animation: card-in 0.45s var(--bounce) both; }
+    .result-card {
+      width: 100%;
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 32px 24px 28px;
+      box-shadow: var(--shadow-lg);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .result-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+    }
+    .result-label { font-size: 12px; color: var(--text-light); font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 14px; }
+    .result-name { font-size: 26px; font-weight: 800; line-height: 1.3; margin-bottom: 16px; word-break: break-word; }
+    .result-meta { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+    .badge-cat { background: rgba(var(--glow-rgb),0.1); color: var(--primary-dark); }
+    .badge-dist { background: rgba(45,139,78,0.1); color: var(--green); }
+    .result-msg { font-size: 14px; color: var(--text-light); margin-top: 14px; line-height: 1.5; }
+
+    .actions { display: flex; gap: 10px; width: 100%; }
+    .btn { flex: 1; padding: 15px 8px; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s var(--ease); display: flex; align-items: center; justify-content: center; gap: 5px; }
+    .btn-primary { background: var(--gradient); color: var(--text-white); box-shadow: 0 4px 16px var(--glow-color); }
+    .btn-primary:active { transform: scale(0.96); }
+    .btn-map { background: rgba(45,139,78,0.1); color: var(--green); }
+    .btn-map:active { background: rgba(45,139,78,0.18); }
+    .count-info { font-size: 12px; color: var(--text-light); }
+    .pos-link { font-size: 12px; color: var(--text-light); text-decoration: underline; cursor: pointer; }
+    .btn-back { margin-top: 4px; border: none; background: none; color: var(--text-light); font-size: 13px; font-weight: 600; cursor: pointer; padding: 8px 16px; border-radius: var(--radius-sm); transition: background 0.2s; }
+    .btn-back:hover { background: rgba(0,0,0,0.05); }
+    body.izakaya .btn-back:hover { background: rgba(255,255,255,0.05); }
+
+    /* ── Error ────────────────────────────── */
+    .error-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; gap: 14px; padding-bottom: 60px; text-align: center; }
+    .error-emoji { font-size: 56px; }
+    .error-title { font-size: 18px; font-weight: 700; }
+    .error-msg { font-size: 14px; color: var(--text-light); line-height: 1.6; max-width: 280px; }
+    .btn-retry { margin-top: 8px; padding: 13px 36px; border: none; border-radius: var(--radius-sm); background: var(--primary); color: var(--text-white); font-size: 15px; font-weight: 700; cursor: pointer; }
+    .btn-retry:active { transform: scale(0.96); }
+
+    .footer { margin-top: auto; padding-top: 20px; font-size: 11px; color: var(--text-light); opacity: 0.5; }
+
+    /* ── Izakaya theme ───────────────────── */
+    body.izakaya {
+      --primary: #D4A017;
+      --primary-dark: #B8860B;
+      --secondary: #F0C040;
+      --accent: #E17055;
+      --bg: #1A1A2E;
+      --bg-card: #2D2D44;
+      --text: #EAEAEA;
+      --text-light: #9A95B0;
+      --text-white: #FFFFFF;
+      --shadow-lg: 0 16px 48px rgba(0,0,0,0.35);
+      --glow-color: rgba(212,160,23,0.4);
+      --glow-rgb: 212,160,23;
+      --gradient: linear-gradient(135deg, #D4A017, #E17055);
+      --bg-gradient: linear-gradient(180deg, #16213E 0%, #1A1A2E 40%);
+    }
+    body.izakaya .mode-toggle { background: rgba(255,255,255,0.08); }
+    body.izakaya .loc-input { background: #2D2D44; border-color: rgba(255,255,255,0.1); color: #EAEAEA; }
+    body.izakaya .loc-input::placeholder { color: #6B6580; }
+    body.izakaya .loc-input:focus { border-color: #D4A017; }
+    body.izakaya .radius-selector { background: rgba(255,255,255,0.06); }
+
+    /* ── Animations ───────────────────────── */
+    @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+    @keyframes pulse-glow { 0%,100% { box-shadow: 0 6px 24px var(--glow-color); } 50% { box-shadow: 0 6px 40px var(--glow-color); } }
+    @keyframes wiggle { 0%,100% { transform: rotate(0) scale(1); } 25% { transform: rotate(8deg) scale(1.05); } 75% { transform: rotate(-8deg) scale(1.05); } }
+    @keyframes card-in { 0% { opacity: 0; transform: scale(0.85) translateY(30px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header class="header">
+      <span class="header-emoji" id="h-emoji">🍽️</span>
+      <h1 id="h-title">くいしんぼう万歳</h1>
+      <p id="h-sub">今日のお昼、決めてあげる！</p>
+    </header>
+
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="mode-lunch" data-mode="lunch">🍽️ ランチ</button>
+      <button class="mode-btn" id="mode-izakaya" data-mode="izakaya">🍺 居酒屋</button>
+    </div>
+
+    <!-- Idle -->
+    <div id="screen-idle" class="screen active">
+      <div class="loc-section">
+        <p class="loc-label">📍 場所を入力してね</p>
+        <div class="loc-input-wrap">
+          <input type="text" id="loc-input" class="loc-input" placeholder="例: 虎ノ門駅">
+        </div>
+      </div>
+
+      <div class="radius-selector" id="radius-selector">
+        <button class="radius-option" data-r="300">300m</button>
+        <button class="radius-option active" data-r="500">500m</button>
+        <button class="radius-option" data-r="1000">1km</button>
+      </div>
+
+      <div class="budget-selector" id="budget-selector">
+        <button class="budget-option active" data-b="all">🍽️ こだわらない</button>
+        <button class="budget-option" data-b="cheap">💰 安く済ませたい</button>
+        <button class="budget-option" data-b="luxury">✨ ちょっと贅沢</button>
+      </div>
+
+      <button class="search-btn" id="btn-search">
+        <span id="search-emoji">🎰</span>
+        <span id="search-label">お昼を決める！</span>
+      </button>
+      <p class="saved-hint" id="saved-hint"></p>
+    </div>
+
+    <!-- Loading -->
+    <div id="screen-loading" class="screen">
+      <div class="loading-wrap">
+        <div class="loading-emoji" id="ld-emoji">🍜</div>
+        <div>
+          <p class="loading-text" id="ld-text">検索中...</p>
+          <p class="loading-sub" id="ld-sub">ちょっと待ってね</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Result -->
+    <div id="screen-result" class="screen">
+      <div class="result-wrap" id="result-wrap">
+        <div class="result-card">
+          <p class="result-label" id="r-label">Today's pick</p>
+          <h2 class="result-name" id="r-name"></h2>
+          <div class="result-meta" id="r-meta"></div>
+          <p class="result-msg" id="r-msg"></p>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" id="btn-reroll">🎲 もう一回！</button>
+          <button class="btn btn-map" id="btn-map">📍 地図で見る</button>
+        </div>
+        <p class="count-info" id="r-count"></p>
+        <a class="pos-link" id="r-pos" href="#" target="_blank"></a>
+        <button class="btn-back" id="btn-back">← 条件を変えて探す</button>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div id="screen-error" class="screen">
+      <div class="error-wrap">
+        <div class="error-emoji" id="e-emoji">😵</div>
+        <h2 class="error-title" id="e-title">おっと！</h2>
+        <p class="error-msg" id="e-msg"></p>
+        <button class="btn-retry" id="btn-retry">もう一度試す</button>
+        <button class="btn-retry" id="btn-fallback-map" style="display:none;background:var(--green);">📍 Google Maps で探す</button>
+      </div>
+    </div>
+
+    <footer class="footer">Powered by OpenStreetMap</footer>
+  </div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ========================================
+     モード定義
+     ======================================== */
+  var MODES = {
+    lunch: {
+      title: 'くいしんぼう万歳',
+      emoji: '🍽️',
+      sub: '今日のお昼、決めてあげる！',
+      searchEmoji: '🎰',
+      searchLabel: 'お昼を決める！',
+      resultLabel: "Today's Pick",
+      foodEmoji: ['🍜','🍛','🍣','🍔','🍕','🥗','🍱','🍝','🍰','🥘','🌮','🍙','🍤','🥟'],
+      messages: [
+        'ここに決まり！行ってらっしゃい 🚶',
+        '美味しいご飯が待ってるよ！',
+        '今日のランチはここで決まり！',
+        'きっと良いチョイス 👍',
+        'ナイスチョイスの予感！✨',
+        '新しい発見があるかも！',
+      ],
+      amenities: ['restaurant','fast_food','cafe'],
+      amenityLabel: { restaurant:'レストラン', fast_food:'ファストフード', cafe:'カフェ' },
+    },
+    izakaya: {
+      title: 'のんべー',
+      emoji: '🍺',
+      sub: '今夜の一杯、決めてあげる！',
+      searchEmoji: '🎰',
+      searchLabel: '居酒屋を決める！',
+      resultLabel: "Tonight's Pick",
+      foodEmoji: ['🍺','🍶','🥃','🍷','🍻','🫗','🍢','🥂','🍖','🍣','🥘','🍤'],
+      messages: [
+        'ここで乾杯！🍻',
+        '今夜はここで決まり！',
+        '良い夜になりそう！🌙',
+        'お疲れの一杯、いってらっしゃい！',
+        'ナイスチョイス！✨',
+        '新しいお店、開拓しよう！',
+      ],
+      amenities: ['bar','pub','nightclub','restaurant'],
+      amenityLabel: { bar:'バー', pub:'パブ', nightclub:'クラブ', restaurant:'居酒屋' },
+    },
+  };
+
+  var CUISINE = {
+    japanese:'和食', sushi:'寿司', ramen:'ラーメン', noodle:'麺類', udon:'うどん',
+    soba:'そば', tempura:'天ぷら', chinese:'中華', italian:'イタリアン',
+    french:'フレンチ', korean:'韓国料理', indian:'インド料理', thai:'タイ料理',
+    vietnamese:'ベトナム料理', mexican:'メキシカン', pizza:'ピザ', burger:'バーガー',
+    curry:'カレー', seafood:'海鮮', coffee_shop:'カフェ', sandwich:'サンドイッチ',
+    izakaya:'居酒屋', yakitori:'焼き鳥', sake:'日本酒バー',
+  };
+
+  /* 予算帯マッピング: amenity/cuisine → cheap / luxury / null(どちらにも) */
+  var BUDGET_CHEAP_AMENITY = { fast_food: true, cafe: true };
+  var BUDGET_CHEAP_CUISINE = {
+    ramen:1, noodle:1, udon:1, soba:1, burger:1, curry:1, sandwich:1,
+    pizza:1, kebab:1, donburi:1, gyudon:1,
+  };
+  var BUDGET_LUXURY_CUISINE = {
+    french:1, italian:1, sushi:1, seafood:1, steak:1, tempura:1,
+    wine_bar:1, cocktail:1, sake:1,
+  };
+  var BUDGET_LUXURY_AMENITY = { nightclub: true };
+
+  function shopBudget(shop) {
+    var c = (shop.cuisine || '').split(';')[0].trim().toLowerCase();
+    var a = shop.amenity;
+    if (BUDGET_CHEAP_AMENITY[a] || BUDGET_CHEAP_CUISINE[c]) return 'cheap';
+    if (BUDGET_LUXURY_AMENITY[a] || BUDGET_LUXURY_CUISINE[c]) return 'luxury';
+    return 'mid';
+  }
+
+  function filterByBudget(list, b) {
+    if (b === 'all') return list;
+    if (b === 'cheap') return list.filter(function (s) { return shopBudget(s) !== 'luxury'; });
+    if (b === 'luxury') return list.filter(function (s) { return shopBudget(s) !== 'cheap'; });
+    return list;
+  }
+
+  /* ========================================
+     状態
+     ======================================== */
+  var mode = 'lunch';
+  var radius = 500;
+  var budget = 'all';
+  var pos = null;
+  var allShops = [];
+  var shops = [];
+  var history = [];
+  var current = null;
+  var busy = false;
+
+  var $ = function (id) { return document.getElementById(id); };
+  function rand(a) { return a[Math.floor(Math.random() * a.length)]; }
+  function cfg() { return MODES[mode]; }
+
+  /* ========================================
+     localStorage
+     ======================================== */
+  var STORAGE_KEY = 'kuisinbou_place';
+  function savePlace(v) { try { localStorage.setItem(STORAGE_KEY, v); } catch(e){} }
+  function loadPlace() { try { return localStorage.getItem(STORAGE_KEY) || ''; } catch(e){ return ''; } }
+
+  /* ========================================
+     UI ヘルパー
+     ======================================== */
+  function showScreen(name) {
+    document.querySelectorAll('.screen').forEach(function (s) { s.classList.remove('active'); });
+    $('screen-' + name).classList.add('active');
+  }
+
+  function setLoad(emoji, text, sub) {
+    $('ld-emoji').textContent = emoji;
+    $('ld-text').textContent = text;
+    if (sub !== undefined) $('ld-sub').textContent = sub;
+  }
+
+  function showError(emoji, title, msg) {
+    $('e-emoji').textContent = emoji;
+    $('e-title').textContent = title;
+    $('e-msg').textContent = msg;
+    $('btn-fallback-map').style.display = 'none';
+    showScreen('error');
+  }
+
+  function applyMode() {
+    var c = cfg();
+    document.body.className = mode === 'izakaya' ? 'izakaya' : '';
+    $('h-title').textContent = c.title;
+    $('h-emoji').textContent = c.emoji;
+    $('h-sub').textContent = c.sub;
+    $('search-emoji').textContent = c.searchEmoji;
+    $('search-label').textContent = c.searchLabel;
+    document.querySelectorAll('.mode-btn').forEach(function (b) {
+      b.classList.toggle('active', b.dataset.mode === mode);
+    });
+    /* モード切替時にキャッシュクリア */
+    allShops = [];
+    shops = [];
+    history = [];
+  }
+
+  /* ========================================
+     Nominatim ジオコーディング
+     ======================================== */
+  function geocode(query) {
+    var url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=jp&q='
+      + encodeURIComponent(query);
+    return fetch(url, { headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d || d.length === 0) return null;
+        return { lat: parseFloat(d[0].lat), lon: parseFloat(d[0].lon) };
+      });
+  }
+
+  /* ========================================
+     Overpass API
+     ======================================== */
+  var ENDPOINTS = [
+    'https://lz4.overpass-api.de/api/interpreter',
+    'https://z.overpass-api.de/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter',
+  ];
+
+  function buildQuery(lat, lon, r) {
+    var amenities = cfg().amenities;
+    var parts = [];
+    amenities.forEach(function (a) {
+      parts.push('node["amenity"="' + a + '"]["name"](around:' + r + ',' + lat + ',' + lon + ');');
+      parts.push('way["amenity"="' + a + '"]["name"](around:' + r + ',' + lat + ',' + lon + ');');
+    });
+    return '[out:json][timeout:25];(' + parts.join('') + ');out center;';
+  }
+
+  function parseElements(data, lat, lon) {
+    var els = (data && data.elements) || [];
+    var seen = {};
+    return els.map(function (el) {
+      var la = el.lat || (el.center && el.center.lat);
+      var lo = el.lon || (el.center && el.center.lon);
+      if (!la || !lo || !el.tags || !el.tags.name) return null;
+      var name = el.tags.name;
+      if (seen[name]) return null;
+      seen[name] = true;
+      return { name: name, amenity: el.tags.amenity || '', cuisine: el.tags.cuisine || '', lat: la, lon: lo, dist: haversine(lat, lon, la, lo) };
+    }).filter(Boolean).sort(function (a, b) { return a.dist - b.dist; });
+  }
+
+  function fetchShops(lat, lon, r) {
+    var q = buildQuery(lat, lon, r);
+    var body = 'data=' + encodeURIComponent(q);
+    var done = false;
+    var ctrls = [];
+
+    return new Promise(function (resolve, reject) {
+      var fails = 0;
+      ENDPOINTS.forEach(function (ep) {
+        var c = new AbortController();
+        ctrls.push(c);
+        var t = setTimeout(function () { c.abort(); }, 30000);
+
+        fetch(ep, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: body, signal: c.signal })
+        .then(function (r) { clearTimeout(t); if (!r.ok) throw new Error('HTTP_' + r.status); return r.json(); })
+        .then(function (d) {
+          if (done) return;
+          done = true;
+          console.log('Overpass OK:', ep);
+          ctrls.forEach(function (x) { try { x.abort(); } catch(e){} });
+          resolve(parseElements(d, lat, lon));
+        })
+        .catch(function (e) {
+          clearTimeout(t);
+          console.warn('Overpass failed:', ep, e.message || e);
+          fails++;
+          if (fails >= ENDPOINTS.length && !done) { done = true; reject(new Error('ALL_ENDPOINTS_FAILED')); }
+        });
+      });
+    });
+  }
+
+  /* ========================================
+     距離・カテゴリ
+     ======================================== */
+  function haversine(lat1, lon1, lat2, lon2) {
+    var R = 6371000, rad = Math.PI / 180;
+    var dLat = (lat2 - lat1) * rad, dLon = (lon2 - lon1) * rad;
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+      + Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  function fmtDist(m) { return m < 1000 ? Math.round(m) + 'm' : (m / 1000).toFixed(1) + 'km'; }
+  function fmtR(r) { return r >= 1000 ? (r / 1000) + 'km' : r + 'm'; }
+
+  function category(shop) {
+    if (shop.cuisine) {
+      var k = shop.cuisine.split(';')[0].trim().toLowerCase();
+      if (CUISINE[k]) return CUISINE[k];
+    }
+    return cfg().amenityLabel[shop.amenity] || 'お店';
+  }
+
+  /* ========================================
+     ルーレット演出
+     ======================================== */
+  function roulette() {
+    showScreen('loading');
+    $('ld-sub').textContent = 'どこにしようかな...';
+    var emEl = $('ld-emoji'), txEl = $('ld-text');
+    var emojis = cfg().foodEmoji;
+    var steps = 14, i = 0;
+    return new Promise(function (resolve) {
+      (function tick() {
+        emEl.textContent = emojis[i % emojis.length];
+        txEl.textContent = rand(shops).name;
+        if (++i > steps) return resolve();
+        setTimeout(tick, 50 + i * 16);
+      })();
+    });
+  }
+
+  /* ========================================
+     選択・表示
+     ======================================== */
+  function pick() {
+    var pool = shops.filter(function (s) { return history.indexOf(s.name) === -1; });
+    if (pool.length === 0) { history = []; pool = shops; }
+    current = rand(pool);
+    history.push(current.name);
+    if (history.length > Math.max(3, Math.floor(shops.length * 0.6))) history = history.slice(-3);
+  }
+
+  function showResult() {
+    $('r-label').textContent = cfg().resultLabel;
+    $('r-name').textContent = current.name;
+    var bud = shopBudget(current);
+    var budLabel = bud === 'cheap' ? '💰 リーズナブル' : bud === 'luxury' ? '✨ ちょっと贅沢' : '';
+    $('r-meta').innerHTML = '<span class="badge badge-cat">' + category(current) + '</span>'
+      + '<span class="badge badge-dist">📍 ' + fmtDist(current.dist) + '</span>'
+      + (budLabel ? '<span class="badge badge-cat">' + budLabel + '</span>' : '');
+    $('r-msg').textContent = rand(cfg().messages);
+    $('r-count').textContent = '周辺 ' + shops.length + ' 件のお店から選びました';
+
+    if (pos) {
+      $('r-pos').href = 'https://www.google.com/maps?q=' + pos.lat + ',' + pos.lon;
+      $('r-pos').textContent = '📌 検索地点を確認する';
+      $('r-pos').style.display = '';
+    }
+
+    var w = $('result-wrap');
+    w.classList.remove('animate');
+    void w.offsetWidth;
+    w.classList.add('animate');
+    showScreen('result');
+  }
+
+  /* ========================================
+     自動範囲拡大
+     ======================================== */
+  var R_STEPS = [300, 500, 1000, 1500];
+  function nextR(cur) { for (var i = 0; i < R_STEPS.length; i++) { if (R_STEPS[i] > cur) return R_STEPS[i]; } return null; }
+
+  function searchExpand(lat, lon, r) {
+    setLoad(rand(cfg().foodEmoji), '周辺のお店を探し中...', '半径 ' + fmtR(r) + ' で検索');
+    return fetchShops(lat, lon, r).then(function (d) {
+      if (d.length > 0) return d;
+      var w = nextR(r);
+      if (!w) return d;
+      setLoad(rand(cfg().foodEmoji), 'もう少し広く探してみるね...', '半径 ' + fmtR(w) + ' に拡大');
+      return fetchShops(lat, lon, w);
+    });
+  }
+
+  /* ========================================
+     メイン検索
+     ======================================== */
+  function startSearch() {
+    var place = $('loc-input').value.trim();
+    if (!place) { $('loc-input').focus(); return; }
+    if (busy) return;
+    busy = true;
+    allShops = [];
+    shops = [];
+    history = [];
+    savePlace(place);
+
+    showScreen('loading');
+    setLoad('🔍', '「' + place + '」を検索中...', '場所を特定しています');
+
+    geocode(place)
+      .then(function (result) {
+        if (!result) {
+          showError('❓', '場所が見つかりません', '「' + place + '」が見つかりませんでした。駅名や地名で試してみてね。');
+          busy = false;
+          return;
+        }
+        pos = result;
+        console.log('Geocode:', pos.lat, pos.lon);
+        return searchExpand(pos.lat, pos.lon, radius);
+      })
+      .then(function (data) {
+        if (!data) return;
+        if (Array.isArray(data)) allShops = data;
+        shops = filterByBudget(allShops, budget);
+        if (shops.length === 0 && allShops.length > 0) {
+          showError('💸', '予算に合うお店が見つからない...', '条件を「こだわらない」にするか、範囲を広げて試してみてね。');
+          busy = false;
+          return;
+        }
+        if (shops.length === 0) {
+          showError('🏜️', 'お店が見つからない...', '「' + place + '」の周辺にお店が見つかりませんでした。範囲を広げるか別の場所で試してね。');
+          busy = false;
+          return;
+        }
+        return roulette().then(function () { pick(); showResult(); busy = false; });
+      })
+      .catch(function (err) {
+        busy = false;
+        var code = (err && err.message) || '';
+        console.error('Search error:', err);
+        if (code === 'ALL_ENDPOINTS_FAILED') {
+          showError('🔧', 'サーバーが混み合っています', '店舗データのサーバーが一時的に応答していません。Google Maps でも探せるよ。');
+          $('btn-fallback-map').style.display = '';
+        } else {
+          showError('😵', 'エラーが発生しました', 'データの取得に失敗しました。もう一度試してね。');
+        }
+      });
+  }
+
+  /* ========================================
+     イベント
+     ======================================== */
+  $('btn-search').addEventListener('click', startSearch);
+  $('loc-input').addEventListener('keydown', function (e) { if (e.key === 'Enter') startSearch(); });
+
+  $('btn-retry').addEventListener('click', function () { showScreen('idle'); });
+
+  $('btn-reroll').addEventListener('click', function () {
+    if (shops.length <= 1) return;
+    pick();
+    showResult();
+  });
+
+  $('btn-back').addEventListener('click', function () { showScreen('idle'); });
+
+  $('btn-map').addEventListener('click', function () {
+    if (!current) return;
+    window.open('https://www.google.com/maps?q=' + current.lat + ',' + current.lon, '_blank');
+  });
+
+  $('btn-fallback-map').addEventListener('click', function () {
+    var q = mode === 'izakaya' ? 'izakaya' : 'restaurant';
+    if (pos) window.open('https://www.google.com/maps/search/' + q + '/@' + pos.lat + ',' + pos.lon + ',16z', '_blank');
+    else window.open('https://www.google.com/maps/search/' + q, '_blank');
+  });
+
+  $('radius-selector').addEventListener('click', function (e) {
+    var btn = e.target.closest('.radius-option');
+    if (!btn) return;
+    radius = Number(btn.dataset.r);
+    allShops = [];
+    shops = [];
+    history = [];
+    document.querySelectorAll('.radius-option').forEach(function (b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+  });
+
+  $('budget-selector').addEventListener('click', function (e) {
+    var btn = e.target.closest('.budget-option');
+    if (!btn) return;
+    budget = btn.dataset.b;
+    document.querySelectorAll('.budget-option').forEach(function (b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    /* キャッシュがあれば即フィルター適用 */
+    if (allShops.length > 0) {
+      shops = filterByBudget(allShops, budget);
+      history = [];
+    }
+  });
+
+  document.querySelector('.mode-toggle').addEventListener('click', function (e) {
+    var btn = e.target.closest('.mode-btn');
+    if (!btn || btn.dataset.mode === mode) return;
+    mode = btn.dataset.mode;
+    applyMode();
+    showScreen('idle');
+  });
+
+  /* ========================================
+     初期化
+     ======================================== */
+  var saved = loadPlace();
+  if (saved) {
+    $('loc-input').value = saved;
+    $('saved-hint').textContent = '前回の場所: ' + saved;
+  }
+  applyMode();
+
+})();
+</script>
+</body>
+</html>
