@@ -108,6 +108,19 @@
     }
     .loc-input:focus { border-color: var(--primary); }
     .loc-input::placeholder { color: #C4B8B8; }
+    .btn-gps {
+      padding: 0 14px;
+      border: 2px solid rgba(0,0,0,0.08);
+      border-radius: var(--radius-sm);
+      background: var(--bg-card);
+      font-size: 20px;
+      cursor: pointer;
+      transition: all 0.2s var(--ease);
+      display: none;
+    }
+    .btn-gps:active { transform: scale(0.93); }
+    .btn-gps.visible { display: flex; align-items: center; justify-content: center; }
+    body.izakaya .btn-gps { background: #2D2D44; border-color: rgba(255,255,255,0.1); }
 
     .radius-selector {
       display: flex;
@@ -295,6 +308,7 @@
         <p class="loc-label">📍 場所を入力してね</p>
         <div class="loc-input-wrap">
           <input type="text" id="loc-input" class="loc-input" placeholder="例: 虎ノ門駅">
+          <button class="btn-gps" id="btn-gps" title="現在地を使う">📡</button>
         </div>
       </div>
 
@@ -684,6 +698,10 @@
   /* ========================================
      メイン検索
      ======================================== */
+  function searchWithPos(place) {
+    return searchExpand(pos.lat, pos.lon, radius)
+  }
+
   function startSearch() {
     var place = $('loc-input').value.trim();
     if (!place) { $('loc-input').focus(); return; }
@@ -706,7 +724,7 @@
         }
         pos = result;
         console.log('Geocode:', pos.lat, pos.lon);
-        return searchExpand(pos.lat, pos.lon, radius);
+        return searchWithPos(place);
       })
       .then(function (data) {
         if (!data) return;
@@ -738,10 +756,64 @@
   }
 
   /* ========================================
+     GPS検索
+     ======================================== */
+  function startGpsSearch() {
+    if (busy) return;
+    busy = true;
+    allShops = [];
+    shops = [];
+    history = [];
+
+    showScreen('loading');
+    setLoad('📡', '現在地を取得中...', 'GPSを使っています');
+
+    navigator.geolocation.getCurrentPosition(
+      function (geoPos) {
+        pos = { lat: geoPos.coords.latitude, lon: geoPos.coords.longitude };
+        $('loc-input').value = '現在地';
+        console.log('GPS:', pos.lat, pos.lon);
+        setLoad(rand(cfg().foodEmoji), '周辺のお店を探し中...', '半径 ' + fmtR(radius) + ' で検索');
+        searchWithPos('現在地')
+          .then(function (data) {
+            if (!data) return;
+            if (Array.isArray(data)) allShops = data;
+            shops = filterByBudget(allShops, budget);
+            if (shops.length === 0 && allShops.length > 0) {
+              showError('💸', '予算に合うお店が見つからない...', '条件を「こだわらない」にするか、範囲を広げて試してみてね。');
+              busy = false;
+              return;
+            }
+            if (shops.length === 0) {
+              showError('🏜️', 'お店が見つからない...', '現在地の周辺にお店が見つかりませんでした。範囲を広げて試してね。');
+              busy = false;
+              return;
+            }
+            return roulette().then(function () { pick(); showResult(); busy = false; });
+          })
+          .catch(function (err) {
+            busy = false;
+            console.error('GPS search error:', err);
+            showError('🔧', 'サーバーが混み合っています', '店舗データのサーバーが一時的に応答していません。');
+          });
+      },
+      function (err) {
+        busy = false;
+        console.error('GPS error:', err);
+        var msg = err.code === 1 ? '位置情報の使用が許可されていません。ブラウザの設定を確認してね。'
+                : '現在地を取得できませんでした。場所を手入力してね。';
+        showError('📡', '現在地を取得できません', msg);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }
+
+  /* ========================================
      イベント
      ======================================== */
   $('btn-search').addEventListener('click', startSearch);
   $('loc-input').addEventListener('keydown', function (e) { if (e.key === 'Enter') startSearch(); });
+  $('btn-gps').addEventListener('click', startGpsSearch);
 
   $('btn-retry').addEventListener('click', function () { showScreen('idle'); });
 
@@ -809,6 +881,9 @@
   if (saved) {
     $('loc-input').value = saved;
     $('saved-hint').textContent = '前回の場所: ' + saved;
+  }
+  if ('geolocation' in navigator) {
+    $('btn-gps').classList.add('visible');
   }
   applyMode();
 
