@@ -340,6 +340,7 @@
         <div class="actions">
           <button class="btn btn-primary" id="btn-reroll">🎲 もう一回！</button>
           <button class="btn btn-map" id="btn-map">📍 地図で見る</button>
+          <button class="btn btn-map" id="btn-search-web" style="color:#3B82F6;background:rgba(59,130,246,0.1);">🔍 検索</button>
         </div>
         <p class="count-info" id="r-count"></p>
         <a class="pos-link" id="r-pos" href="#" target="_blank"></a>
@@ -755,6 +756,12 @@
   $('btn-map').addEventListener('click', function () {
     if (!current) return;
     window.open('https://www.google.com/maps?q=' + current.lat + ',' + current.lon, '_blank');
+  });
+
+  $('btn-search-web').addEventListener('click', function () {
+    if (!current) return;
+    var q = $('loc-input').value.trim() + ' ' + current.name + (mode === 'lunch' ? ' ランチ' : '');
+    window.open('https://www.google.com/search?q=' + encodeURIComponent(q), '_blank');
   });
 
   $('btn-fallback-map').addEventListener('click', function () {
